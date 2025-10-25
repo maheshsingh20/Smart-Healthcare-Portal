@@ -25,12 +25,6 @@ import {
 import { Menu, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface SubNavItem {
-  href: string;
-  label: string;
-  description: string;
-}
-
 const navItems = [
   { href: "/", label: "Home" },
   {
@@ -136,13 +130,13 @@ export function Navbar() {
             asChild
             className="rounded-xl border-blue-300 hover:bg-blue-100/30 text-blue-700 dark:border-blue-700 dark:hover:bg-blue-900/30"
           >
-            <Link to="/login">Login</Link>
+            <Link to="/select-role">Login</Link>
           </Button>
           <Button
             asChild
             className="rounded-xl bg-gradient-to-r from-blue-600 to-red-500 hover:from-red-500 hover:to-blue-600 text-white shadow-md hover:shadow-lg transition-all"
           >
-            <Link to="/register">Sign Up</Link>
+            <Link to="/select-role">Sign Up</Link>
           </Button>
         </div>
 
@@ -218,7 +212,7 @@ export function Navbar() {
                 <div className="mt-6 flex flex-col gap-3 border-t pt-6">
                   <SheetClose asChild>
                     <Button variant="outline" asChild>
-                      <Link to="/login">Login</Link>
+                      <Link to="/select-role">Login</Link>
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
@@ -226,7 +220,7 @@ export function Navbar() {
                       asChild
                       className="bg-gradient-to-r from-blue-600 to-red-500 text-white hover:from-red-500 hover:to-blue-600"
                     >
-                      <Link to="/register">Sign Up</Link>
+                      <Link to="/select-role">Sign Up</Link>
                     </Button>
                   </SheetClose>
                 </div>

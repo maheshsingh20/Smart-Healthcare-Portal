@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -7,29 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Stethoscope, AlertCircle } from "lucide-react";
-
-// Concept for auth context (create this in a separate file, e.g., hooks/useAuth.tsx)
-// const useAuth = () => ({
-//   login: (user: any, token: string) => {
-//     console.log("Logged in", user);
-//     localStorage.setItem("token", token);
-//     localStorage.setItem("user", JSON.stringify(user));
-//   },
-// });
+import { Stethoscope, AlertCircle, Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export function DoctorAuthPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
-  // const auth = useAuth(); // Use your auth context here
+  const { login, signup } = useAuth();
 
-  const [loginData, setLoginData] = useState({
-    email: "",
-    password: "",
-  });
-
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
   const [signupData, setSignupData] = useState({
     name: "",
     email: "",
@@ -38,37 +25,20 @@ export function DoctorAuthPage() {
     password: "",
   });
 
-  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setLoginData({ ...loginData, [e.target.name]: e.target.value });
-  };
-
-  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSignupChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setSignupData({ ...signupData, [e.target.name]: e.target.value });
-  };
 
+  // --- Login Handler ---
   const handleLoginSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/doctor/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(loginData),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // --- On Success ---
-      // auth.login(data.user, data.token);
-      console.log("Login successful", data);
-      localStorage.setItem("token", data.token); // Store token
-      navigate("/doctor/dashboard"); // Redirect to dashboard
+      await login(loginData.email, loginData.password, "doctor");
+      navigate("/doctor/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,6 +46,7 @@ export function DoctorAuthPage() {
     }
   };
 
+  // --- Signup Handler ---
   const handleSignupSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -83,22 +54,10 @@ export function DoctorAuthPage() {
     setSuccess(null);
 
     try {
-      const res = await fetch("/api/auth/doctor/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...signupData, name: signupData.name }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Signup failed");
-      }
-
-      // --- On Success ---
-      setSuccess(data.message); // Show "Pending admin approval"
-      // Optionally, switch to login tab
-      // document.querySelector('[data-radix-collection-item][value="login"]')?.click();
+      await signup(signupData, "doctor");
+      setSuccess(
+        "Doctor account created successfully. Pending admin approval."
+      );
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -133,7 +92,6 @@ export function DoctorAuthPage() {
               <TabsTrigger value="signup">Signup</TabsTrigger>
             </TabsList>
 
-            {/* Error/Success Display */}
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
@@ -162,6 +120,8 @@ export function DoctorAuthPage() {
                   required
                   value={loginData.email}
                   onChange={handleLoginChange}
+                  // ADDED: Autocomplete for security and usability
+                  autoComplete="email"
                 />
                 <Input
                   name="password"
@@ -170,13 +130,19 @@ export function DoctorAuthPage() {
                   required
                   value={loginData.password}
                   onChange={handleLoginChange}
+                  // ADDED: Autocomplete for security and usability
+                  autoComplete="current-password"
                 />
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-blue-600 to-red-500 text-white"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Logging in..." : "Login"}
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Login"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -193,6 +159,7 @@ export function DoctorAuthPage() {
                   required
                   value={signupData.name}
                   onChange={handleSignupChange}
+                  autoComplete="name"
                 />
                 <Input
                   name="email"
@@ -201,6 +168,7 @@ export function DoctorAuthPage() {
                   required
                   value={signupData.email}
                   onChange={handleSignupChange}
+                  autoComplete="email"
                 />
                 <Input
                   name="phone"
@@ -209,6 +177,7 @@ export function DoctorAuthPage() {
                   required
                   value={signupData.phone}
                   onChange={handleSignupChange}
+                  autoComplete="tel"
                 />
                 <Input
                   name="specialization"
@@ -216,6 +185,7 @@ export function DoctorAuthPage() {
                   required
                   value={signupData.specialization}
                   onChange={handleSignupChange}
+                  autoComplete="organization-title"
                 />
                 <Input
                   name="password"
@@ -224,13 +194,19 @@ export function DoctorAuthPage() {
                   required
                   value={signupData.password}
                   onChange={handleSignupChange}
+                  // ADDED: Autocomplete for security and usability
+                  autoComplete="new-password"
                 />
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-blue-600 to-red-500 text-white"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Sign Up"}
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    "Sign Up"
+                  )}
                 </Button>
               </form>
               <p className="text-xs text-center text-muted-foreground mt-3">

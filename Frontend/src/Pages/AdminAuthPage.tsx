@@ -6,15 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ShieldCheck, AlertCircle } from "lucide-react";
-
-// Concept for auth context
-// const useAuth = () => ({
-//   login: (user: any, token: string) => {
-//     console.log("Logged in", user);
-//     localStorage.setItem("token", token);
-//     localStorage.setItem("user", JSON.stringify(user));
-//   },
-// });
+import { useAuth } from "@/context/AuthContext";
 
 export function AdminAuthPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -22,7 +14,7 @@ export function AdminAuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  // const auth = useAuth(); // Use your auth context here
+  const { login } = useAuth();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,23 +22,8 @@ export function AdminAuthPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/auth/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      // --- On Success ---
-      // auth.login(data.user, data.token);
-      console.log("Admin Login successful", data);
-      localStorage.setItem("token", data.token); // Store token
-      navigate("/admin/dashboard"); // Redirect to admin dashboard
+      await login(email, password, "admin");
+      navigate("/admin/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {

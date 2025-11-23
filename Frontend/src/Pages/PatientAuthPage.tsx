@@ -12,18 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert"; // Assuming you have this
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { motion } from "framer-motion";
-import { Mail, Phone, Lock, User, AlertCircle } from "lucide-react"; // Assuming you have AlertCircle
-
-// Concept for auth context
-// const useAuth = () => ({
-//   login: (user: any, token: string) => {
-//     console.log("Logged in", user);
-//     localStorage.setItem("token", token);
-//     localStorage.setItem("user", JSON.stringify(user));
-//   },
-// });
+import { Mail, Phone, Lock, User, AlertCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 export function PatientAuthPage() {
   const [isSignup, setIsSignup] = useState(false);
@@ -31,7 +23,7 @@ export function PatientAuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const navigate = useNavigate();
-  // const auth = useAuth(); // Use your auth context here
+  const { login, signup } = useAuth();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -50,46 +42,17 @@ export function PatientAuthPage() {
     setError(null);
     setSuccess(null);
 
-    const endpoint = isSignup
-      ? "/api/auth/patient/signup"
-      : "/api/auth/patient/login";
-
-    // Prepare payload based on form mode
-    const payload = isSignup
-      ? formData
-      : { email: formData.email, password: formData.password };
-
     try {
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      // --- IMPROVED ERROR HANDLING ---
-      // Try to parse the JSON response body, even if the status is not ok
-      const data = await res.json();
-
-      if (!res.ok) {
-        // Use the specific 'message' from the backend JSON response
-        throw new Error(data.message || `An error occurred: ${res.statusText}`);
-      }
-      // --- END IMPROVEMENT ---
-
-      // Handle success
       if (isSignup) {
+        await signup(formData, "patient");
         setSuccess("Account created successfully! Please login.");
-        setIsSignup(false); // Switch to login tab
-        setFormData({ ...formData, password: "" }); // Clear password field
+        setIsSignup(false);
+        setFormData({ ...formData, password: "" });
       } else {
-        // --- On Login Success ---
-        // auth.login(data.user, data.token);
-        console.log("Patient Login successful", data);
-        localStorage.setItem("token", data.token); // Store token
-        navigate("/patient/dashboard"); // Redirect to patient dashboard
+        await login(formData.email, formData.password, "patient");
+        navigate("/patient/dashboard");
       }
     } catch (err: any) {
-      // 'err.message' will now contain the backend's specific error
       setError(err.message);
     } finally {
       setIsLoading(false);
